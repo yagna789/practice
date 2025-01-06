@@ -1,12 +1,12 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./components/Home";
-import Addition from "./components/Addition";
-import Subtraction from "./components/Subtraction";
-import Multiplication from "./components/Multiplication";
-import Division from "./components/Division";
-import Squares from "./components/Squares";
-import Cubes from "./components/Cubes";
+import Home from "./Home";
+import Addition from "./Addition";
+import Subtraction from "./Subtraction";
+import Multiplication from "./Multiplication";
+import Division from "./Division";
+import Squares from "./Squares";
+import Cubes from "./Cubes";
 
 function App() {
   return (
