@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { Line } from "react-chartjs-2";
+import { Chart, CategoryScale, Legend, LinearScale, LineElement, PointElement, Title, Tooltip } from "chart.js";
+
+Chart.register(LinearScale, CategoryScale, LineElement, PointElement, Title, Tooltip, Legend);
 
 function Addition() {
   const [question, setQuestion] = useState("");
