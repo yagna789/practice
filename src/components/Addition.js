@@ -7,22 +7,28 @@ function Addition() {
   const [userAnswer, setUserAnswer] = useState("");
   const [performance, setPerformance] = useState([]);
   const [difficulty, setDifficulty] = useState("");
+const generateQuestion = (level) => {
+  let num1, num2;
 
-  const generateQuestion = (level) => {
-    let num1, num2;
-    if (level === "1-digit") {
-      num1 = Math.floor(Math.random() * 10);
-      num2 = Math.floor(Math.random() * 10);
-    } else if (level === "2-digit") {
-      num1 = Math.floor(Math.random() * 90) + 10;
-      num2 = Math.floor(Math.random() * 90) + 10;
-    } else if (level === "3-digit") {
-      num1 = Math.floor(Math.random() * 900) + 100;
-      num2 = Math.floor(Math.random() * 90) + 10; // 3-digit with 2-digit
-    }
-    setQuestion(`${num1} + ${num2}`);
-    setAnswer(num1 + num2);
-  };
+  if (level === "1-digit") {
+    num1 = Math.floor(Math.random() * 8) + 2; // Generates numbers from 2 to 9
+    num2 = Math.floor(Math.random() * 8) + 2; // Generates numbers from 2 to 9
+  } else if (level === "2-digit") {
+    num1 = Math.floor(Math.random() * 90) + 10; // Generates numbers from 10 to 99
+    do {
+      num2 = Math.floor(Math.random() * 90) + 10; // Generates numbers from 10 to 99
+    } while (num2 === 0 || num2 === 1); // Ensures `0` and `1` are excluded
+  } else if (level === "3-digit") {
+    num1 = Math.floor(Math.random() * 900) + 100; // Generates numbers from 100 to 999
+    do {
+      num2 = Math.floor(Math.random() * 90) + 10; // Generates numbers from 10 to 99
+    } while (num2 === 0 || num2 === 1); // Ensures `0` and `1` are excluded
+  }
+
+  setQuestion(`${num1} + ${num2}`);
+  setAnswer(num1 + num2);
+};
+
 
   const handleSubmit = () => {
     const isCorrect = parseInt(userAnswer) === answer;
