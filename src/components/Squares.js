@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 
 function Squares() {
@@ -6,21 +6,38 @@ function Squares() {
   const [answer, setAnswer] = useState("");
   const [userAnswer, setUserAnswer] = useState("");
   const [performance, setPerformance] = useState([]);
+  const inputRef = useRef(null); // Ref for the input field
+
+  // Automatically focus the input field when a new question is generated or after submission
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [question]);
 
   const generateQuestion = () => {
-    const num = Math.floor(Math.random() * 40) + 1; // Between 1 and 40
+    const num = Math.floor(Math.random() * 40) + 1; // Generate a number between 1 and 40
     setQuestion(`What is ${num}²?`);
     setAnswer(num * num);
+    setUserAnswer(""); // Clear the input field for the next question
   };
 
   const handleSubmit = () => {
+    if (userAnswer.trim() === "") return; // Prevent submission if the input is empty
     const isCorrect = parseInt(userAnswer) === answer;
     const timestamp = new Date().toLocaleTimeString();
-    setPerformance([
-      ...performance,
+    setPerformance((prevPerformance) => [
+      ...prevPerformance,
       { question, userAnswer, correct: isCorrect, timestamp },
     ]);
-    setUserAnswer("");
+    setUserAnswer(""); // Clear the input field after submission
+    generateQuestion(); // Generate a new question after submission
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSubmit(); // Call the submit handler when the Enter key is pressed
+    }
   };
 
   const chartData = {
@@ -52,9 +69,11 @@ function Squares() {
         <div style={{ marginTop: "20px" }}>
           <h3>Question: {question}</h3>
           <input
+            ref={inputRef} // Attach the ref to the input field
             type="number"
             value={userAnswer}
             onChange={(e) => setUserAnswer(e.target.value)}
+            onKeyDown={handleKeyDown} // Handle Enter key press
             placeholder="Enter your answer"
           />
           <button onClick={handleSubmit}>Submit</button>
