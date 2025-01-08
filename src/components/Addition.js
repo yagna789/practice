@@ -1,83 +1,79 @@
-import { Chart, CategoryScale, Legend, LinearScale, LineElement, PointElement, Title, Tooltip } from "chart.js";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Line } from "react-chartjs-2";
 
-Chart.register(LinearScale, CategoryScale, LineElement, PointElement, Title, Tooltip, Legend);
-
 function Addition() {
-  const [difficulty, setDifficulty] = useState("");
-  const [questions, setQuestions] = useState([]);
-  const [questionCount, setQuestionCount] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [question, setQuestion] = useState("");
+  const [answer, setAnswer] = useState("");
   const [userAnswer, setUserAnswer] = useState("");
   const [performance, setPerformance] = useState([]);
+  const [levelOptions, setLevelOptions] = useState([]); // Options for levels
+  const inputRef = useRef(null);
 
-  // Function to generate a set of questions based on the difficulty level and count
-  const generateQuestionSet = (count) => {
-    const generatedQuestions = [];
-    for (let i = 0; i < count; i++) {
-      let num1, num2;
-
-      if (difficulty === "1-digit") {
-        num1 = Math.floor(Math.random() * 8) + 2; // 2 to 9
-        num2 = Math.floor(Math.random() * 8) + 2; // 2 to 9
-      } else if (difficulty === "2-digit") {
-        num1 = Math.floor(Math.random() * 90) + 10; // 10 to 99
-        num2 = Math.floor(Math.random() * 90) + 10; // 10 to 99
-      } else if (difficulty === "3-digit") {
-        num1 = Math.floor(Math.random() * 900) + 100; // 100 to 999
-        num2 = Math.floor(Math.random() * 90) + 10; // 10 to 99
-      }
-
-      generatedQuestions.push({ num1, num2 });
+  // Automatically focus the input field when a new question is generated or after submission
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
     }
-    setQuestions(generatedQuestions);
-    setQuestionCount(count);
-    setCurrentQuestion(0);
-    setPerformance([]);
+  }, [question]);
+
+  const generateQuestion = (level1, level2) => {
+    const getRandomNumber = (digits) => {
+      const min = Math.pow(10, digits - 1);
+      const max = Math.pow(10, digits) - 1;
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+
+    const num1 = getRandomNumber(level1);
+    const num2 = getRandomNumber(level2);
+    setQuestion(`${num1} + ${num2}`);
+    setAnswer(num1 + num2);
+    setUserAnswer(""); // Clear the input field for the next question
   };
 
-  const handleAnswerSubmission = () => {
-    const { num1, num2 } = questions[currentQuestion];
-    const correctAnswer = num1 + num2;
-    const isCorrect = parseInt(userAnswer) === correctAnswer;
-    const timestamp = new Date().toLocaleTimeString();
+  const handleLevelSelect = (level) => {
+    if (level === "1-digit") {
+      setLevelOptions([]); // No extra options for 1-digit
+      generateQuestion(1, 1);
+    } else if (level === "2-digit") {
+      setLevelOptions([
+        { label: "2-digit vs 1-digit", levels: [2, 1] },
+        { label: "2-digit vs 2-digit", levels: [2, 2] },
+      ]);
+    } else if (level === "3-digit") {
+      setLevelOptions([
+        { label: "3-digit vs 1-digit", levels: [3, 1] },
+        { label: "3-digit vs 2-digit", levels: [3, 2] },
+        { label: "3-digit vs 3-digit", levels: [3, 3] },
+      ]);
+    }
+  };
 
+  const handleSubmit = () => {
+    if (userAnswer.trim() === "") return; // Prevent submission if the input is empty
+    const isCorrect = parseInt(userAnswer) === answer;
+    const timestamp = new Date().toLocaleTimeString();
     setPerformance((prevPerformance) => [
       ...prevPerformance,
-      {
-        question: `${num1} + ${num2}`,
-        userAnswer,
-        correct: isCorrect,
-        timestamp,
-      },
+      { question, userAnswer, correct: isCorrect, timestamp },
     ]);
-
-    setUserAnswer("");
-    setCurrentQuestion((prev) => prev + 1);
+    setUserAnswer(""); // Clear the input field after submission
+    setQuestion(""); // Clear the question
   };
 
-  const startNewSet = (count) => {
-    if (difficulty) {
-      generateQuestionSet(count);
-    } else {
-      alert("Please select a difficulty level first.");
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSubmit(); // Call the submit handler when the Enter key is pressed
     }
   };
 
-  // Generate the performance chart data
   const chartData = {
     labels: performance.map((entry) => entry.timestamp),
     datasets: [
       {
         label: "Correct (1) vs Incorrect (0)",
         data: performance.map((entry) => (entry.correct ? 1 : 0)),
-        backgroundColor: performance.map((entry) =>
-          entry.correct ? "rgba(75, 192, 192, 0.6)" : "rgba(255, 99, 132, 0.6)"
-        ),
-        borderColor: performance.map((entry) =>
-          entry.correct ? "rgba(75, 192, 192, 1)" : "rgba(255, 99, 132, 1)"
-        ),
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
         borderWidth: 2,
       },
     ],
@@ -100,35 +96,44 @@ function Addition() {
     <div style={{ textAlign: "center", padding: "20px" }}>
       <h2>Addition</h2>
       <p>Select difficulty level:</p>
-      <button onClick={() => setDifficulty("1-digit")}>1-Digit</button>
-      <button onClick={() => setDifficulty("2-digit")}>2-Digit</button>
-      <button onClick={() => setDifficulty("3-digit")}>3-Digit</button>
+      <button onClick={() => handleLevelSelect("1-digit")}>1-Digit</button>
+      <button onClick={() => handleLevelSelect("2-digit")}>2-Digit</button>
+      <button onClick={() => handleLevelSelect("3-digit")}>3-Digit</button>
 
-      <p>Select the number of questions:</p>
-      <button onClick={() => startNewSet(20)}>20 Questions</button>
-      <button onClick={() => startNewSet(40)}>40 Questions</button>
-      <button onClick={() => startNewSet(60)}>60 Questions</button>
-
-      {questions.length > 0 && currentQuestion < questionCount && (
+      {levelOptions.length > 0 && (
         <div style={{ marginTop: "20px" }}>
-          <h3>
-            Question: {questions[currentQuestion].num1} + {questions[currentQuestion].num2}
-          </h3>
-          <input
-            type="number"
-            value={userAnswer}
-            onChange={(e) => setUserAnswer(e.target.value)}
-            placeholder="Enter your answer"
-          />
-          <button onClick={handleAnswerSubmission}>Submit</button>
+          <p>Select combination:</p>
+          {levelOptions.map((option, index) => (
+            <button
+              key={index}
+              onClick={() => generateQuestion(...option.levels)}
+              style={{ margin: "5px" }}
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
       )}
 
-      {currentQuestion === questionCount && performance.length > 0 && (
-        <div style={{ marginTop: "40px" }}>
-          <h3>Performance Chart for {questionCount} Questions</h3>
-          <Line data={chartData} options={chartOptions} />
+      {question && (
+        <div style={{ marginTop: "20px" }}>
+          <h3>Question: {question}</h3>
+          <input
+            ref={inputRef} // Attach the ref to the input field
+            type="number"
+            value={userAnswer}
+            onChange={(e) => setUserAnswer(e.target.value)}
+            onKeyDown={handleKeyDown} // Handle Enter key press
+            placeholder="Enter your answer"
+          />
+          <button onClick={handleSubmit}>Submit</button>
+        </div>
+      )}
 
+      {performance.length > 0 && (
+        <div style={{ marginTop: "40px" }}>
+          <h3>Performance Chart</h3>
+          <Line data={chartData} options={chartOptions} />
           <div style={{ marginTop: "20px", textAlign: "left" }}>
             <h3>Performance Table</h3>
             <table border="1" style={{ width: "100%", textAlign: "center" }}>
